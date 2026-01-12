@@ -11,28 +11,13 @@ struct BloodTestRecordView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var manager = BloodTestKitManager()
     
-    @State private var measurementDate = Date()
-    @State private var eventText = ""
-    
-    // 重点指标输入
-    @State private var wbcText = ""
-    @State private var neutAbsText = ""
-    @State private var hgbText = ""
-    @State private var pltText = ""
-    
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
-    @State private var isSaving = false
     @State private var showingHistory = false
     @State private var showingAllMetrics = false
     @State private var showingImport = false
-    
-    @FocusState private var focusedField: FocusedField?
-    
-    enum FocusedField: Hashable {
-        case event, wbc, neutAbs, hgb, plt
-    }
+    @State private var showingManualInput = false
     
     private var isDark: Bool { colorScheme == .dark }
     
@@ -55,15 +40,10 @@ struct BloodTestRecordView: View {
     private var cardBackground: Color { isDark ? Color(white: 0.15) : .white }
     private var primaryTextColor: Color { isDark ? Color(white: 0.95) : Color(white: 0.15) }
     private var secondaryTextColor: Color { isDark ? Color(white: 0.6) : Color(white: 0.45) }
-    private var tertiaryTextColor: Color { isDark ? Color(white: 0.5) : Color(white: 0.35) }
-    
-    private var isInputValid: Bool {
-        !wbcText.isEmpty || !neutAbsText.isEmpty || !hgbText.isEmpty || !pltText.isEmpty
-    }
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 14) {
+            VStack(spacing: 16) {
                 // 顶部图标
                 VStack(spacing: 8) {
                     ZStack {
@@ -88,168 +68,94 @@ struct BloodTestRecordView: View {
                         .foregroundStyle(primaryTextColor)
                 }
                 .padding(.top, 6)
-                .onTapGesture { hideKeyboard() }
                 
-                // 基础信息卡片
+                // 录入方式选择卡片
                 VStack(spacing: 12) {
-                    // 日期选择
                     HStack {
-                        Label("检测日期", systemImage: "calendar")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(secondaryTextColor)
-                        
-                        Spacer()
-                        
-                        DatePicker("", selection: $measurementDate, displayedComponents: .date)
-                            .datePickerStyle(.compact)
-                            .labelsHidden()
-                            .tint(.purple)
-                    }
-                    
-                    Divider()
-                    
-                    // EVENT 输入
-                    HStack {
-                        Label("事件标签", systemImage: "tag")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(secondaryTextColor)
-                        
-                        Spacer()
-                        
-                        TextField("如 FOLFIRI C2 D11", text: $eventText)
-                            .font(.system(size: 14, design: .rounded))
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.purple)
+                        Text("新增记录")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundStyle(primaryTextColor)
-                            .multilineTextAlignment(.trailing)
-                            .focused($focusedField, equals: .event)
-                            .frame(width: 160)
+                        Spacer()
                     }
+                    
+                    // 手动录入按钮
+                    Button(action: { showingManualInput = true }) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.purple.opacity(isDark ? 0.2 : 0.15))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "square.and.pencil")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundStyle(.purple)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("手动录入")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(primaryTextColor)
+                                Text("逐项填写检测指标")
+                                    .font(.system(size: 11, design: .rounded))
+                                    .foregroundStyle(secondaryTextColor)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(secondaryTextColor)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.purple.opacity(isDark ? 0.1 : 0.05))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // 粘贴导入按钮
+                    Button(action: { showingImport = true }) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(isDark ? 0.2 : 0.15))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "doc.on.clipboard")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundStyle(.blue)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("粘贴导入")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(primaryTextColor)
+                                Text("从 JSON 数据批量导入")
+                                    .font(.system(size: 11, design: .rounded))
+                                    .foregroundStyle(secondaryTextColor)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(secondaryTextColor)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.blue.opacity(isDark ? 0.1 : 0.05))
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(14)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 14)
                         .fill(cardBackground)
-                        .shadow(color: .black.opacity(isDark ? 0.25 : 0.05), radius: 5, x: 0, y: 2)
+                        .shadow(color: .black.opacity(isDark ? 0.3 : 0.06), radius: 6, x: 0, y: 3)
                 )
-                .padding(.horizontal, 20)
-                
-                // 重点指标输入卡片
-                VStack(spacing: 10) {
-                    HStack {
-                        Text("重点指标")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(tertiaryTextColor)
-                        Spacer()
-                    }
-                    
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        MetricInputCard(
-                            key: .wbc,
-                            value: $wbcText,
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: focusedField == .wbc
-                        )
-                        .focused($focusedField, equals: .wbc)
-                        
-                        MetricInputCard(
-                            key: .neutAbs,
-                            value: $neutAbsText,
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: focusedField == .neutAbs
-                        )
-                        .focused($focusedField, equals: .neutAbs)
-                        
-                        MetricInputCard(
-                            key: .hgb,
-                            value: $hgbText,
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: focusedField == .hgb
-                        )
-                        .focused($focusedField, equals: .hgb)
-                        
-                        MetricInputCard(
-                            key: .plt,
-                            value: $pltText,
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: focusedField == .plt
-                        )
-                        .focused($focusedField, equals: .plt)
-                    }
-                }
-                .padding(.horizontal, 20)
-                
-                // 更多指标入口 & 导入按钮
-                HStack(spacing: 12) {
-                    Button(action: { showingAllMetrics = true }) {
-                        HStack {
-                            Image(systemName: "list.bullet.rectangle")
-                            Text("更多指标")
-                        }
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.purple)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.purple.opacity(isDark ? 0.2 : 0.1))
-                        )
-                    }
-                    
-                    Button(action: { showingImport = true }) {
-                        HStack {
-                            Image(systemName: "doc.on.clipboard")
-                            Text("粘贴导入")
-                        }
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.blue.opacity(isDark ? 0.2 : 0.1))
-                        )
-                    }
-                    
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                
-                // 保存按钮
-                Button(action: saveRecord) {
-                    HStack(spacing: 8) {
-                        if isSaving {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 16))
-                        }
-                        Text(isSaving ? "保存中..." : "保存记录")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        LinearGradient(colors: [.purple, .indigo], startPoint: .leading, endPoint: .trailing)
-                    )
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .shadow(color: Color.purple.opacity(isDark ? 0.6 : 0.4), radius: 10, x: 0, y: 5)
-                }
-                .disabled(isSaving || !isInputValid)
-                .opacity(isInputValid ? 1.0 : 0.6)
                 .padding(.horizontal, 20)
                 
                 // 最新记录概览
@@ -279,22 +185,37 @@ struct BloodTestRecordView: View {
                 )
                 .padding(.horizontal, 20)
                 
+                // 查看全部指标入口
+                Button(action: { showingAllMetrics = true }) {
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle")
+                            .foregroundStyle(.purple)
+                        Text("查看全部指标趋势")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(primaryTextColor)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(secondaryTextColor)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(cardBackground)
+                            .shadow(color: .black.opacity(isDark ? 0.25 : 0.05), radius: 4, x: 0, y: 2)
+                    )
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 20)
+                
                 Spacer(minLength: 20)
             }
             .padding(.top, 6)
         }
         .background(backgroundColor.ignoresSafeArea())
-        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("血液检测")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .keyboard) {
-                HStack {
-                    Spacer()
-                    Button("完成") { hideKeyboard() }
-                        .fontWeight(.semibold)
-                }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: { showingHistory = true }) {
                     Image(systemName: "clock.arrow.circlepath")
@@ -315,6 +236,13 @@ struct BloodTestRecordView: View {
                 showingAlert = true
             }
         }
+        .sheet(isPresented: $showingManualInput) {
+            ManualInputView(manager: manager) { message in
+                alertTitle = "保存成功 ✓"
+                alertMessage = message
+                showingAlert = true
+            }
+        }
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("好的", role: .cancel) {}
         } message: {
@@ -324,28 +252,193 @@ struct BloodTestRecordView: View {
             await manager.refresh()
         }
     }
+}
+
+// MARK: - 手动录入视图
+struct ManualInputView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject var manager: BloodTestKitManager
+    var onComplete: (String) -> Void
     
-    private func hideKeyboard() {
-        focusedField = nil
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    @State private var measurementDate = Date()
+    @State private var eventText = ""
+    @State private var metricValues: [LabMetricKey: String] = [:]
+    @State private var isSaving = false
+    @State private var selectedCategory: LabMetricCategory? = .bloodRoutine
+    @State private var searchText = ""
+    
+    @FocusState private var focusedMetric: LabMetricKey?
+    
+    private var isDark: Bool { colorScheme == .dark }
+    private var cardBackground: Color { isDark ? Color(white: 0.15) : .white }
+    private var primaryTextColor: Color { isDark ? Color(white: 0.95) : Color(white: 0.15) }
+    private var secondaryTextColor: Color { isDark ? Color(white: 0.6) : Color(white: 0.45) }
+    
+    // 筛选后的指标
+    private var filteredMetrics: [LabMetricKey] {
+        var result = LabMetricKey.allCases
+        
+        if let category = selectedCategory {
+            result = result.filter { $0.category == category }
+        }
+        
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.displayName.localizedCaseInsensitiveContains(searchText) ||
+                $0.shortName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        return result.sorted { $0.sortOrder < $1.sortOrder }
+    }
+    
+    // 已填写的指标数量
+    private var filledCount: Int {
+        metricValues.values.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count
+    }
+    
+    private var isValid: Bool {
+        filledCount > 0
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // 基础信息
+                VStack(spacing: 12) {
+                    HStack {
+                        Label("检测日期", systemImage: "calendar")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(secondaryTextColor)
+                        Spacer()
+                        DatePicker("", selection: $measurementDate, displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .tint(.purple)
+                    }
+                    
+                    Divider()
+                    
+                    HStack {
+                        Label("事件标签", systemImage: "tag")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(secondaryTextColor)
+                        Spacer()
+                        TextField("如 FOLFIRI C2 D11", text: $eventText)
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundStyle(primaryTextColor)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+                .padding(14)
+                .background(cardBackground)
+                
+                Divider()
+                
+                // 搜索栏
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(secondaryTextColor)
+                    TextField("搜索指标", text: $searchText)
+                        .font(.system(size: 14, design: .rounded))
+                }
+                .padding(10)
+                .background(isDark ? Color(white: 0.12) : Color(white: 0.95))
+                
+                // 分类筛选
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        CategoryChip(
+                            category: nil,
+                            isSelected: selectedCategory == nil,
+                            isDark: isDark
+                        ) { selectedCategory = nil }
+                        
+                        ForEach(LabMetricCategory.allCases, id: \.self) { category in
+                            CategoryChip(
+                                category: category,
+                                isSelected: selectedCategory == category,
+                                isDark: isDark
+                            ) { selectedCategory = category }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .padding(.vertical, 10)
+                .background(isDark ? Color(white: 0.1) : Color(white: 0.97))
+                
+                // 指标列表
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredMetrics, id: \.self) { key in
+                            MetricInputRow(
+                                key: key,
+                                value: binding(for: key),
+                                isDark: isDark,
+                                primaryTextColor: primaryTextColor,
+                                secondaryTextColor: secondaryTextColor,
+                                isFocused: focusedMetric == key
+                            )
+                            .focused($focusedMetric, equals: key)
+                            
+                            Divider()
+                                .padding(.leading, 16)
+                        }
+                    }
+                    .background(cardBackground)
+                }
+                .scrollDismissesKeyboard(.interactively)
+            }
+            .navigationTitle("手动录入")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: saveRecord) {
+                        if isSaving {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("保存 (\(filledCount))")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .disabled(!isValid || isSaving)
+                }
+                ToolbarItem(placement: .keyboard) {
+                    HStack {
+                        Spacer()
+                        Button("完成") {
+                            focusedMetric = nil
+                        }
+                        .fontWeight(.semibold)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func binding(for key: LabMetricKey) -> Binding<String> {
+        Binding(
+            get: { metricValues[key] ?? "" },
+            set: { metricValues[key] = $0 }
+        )
     }
     
     private func saveRecord() {
-        hideKeyboard()
+        focusedMetric = nil
+        isSaving = true
         
         var values: [LabMetricKey: Double] = [:]
-        
-        if let wbc = Double(wbcText.trimmingCharacters(in: .whitespaces)) {
-            values[.wbc] = wbc
-        }
-        if let neutAbs = Double(neutAbsText.trimmingCharacters(in: .whitespaces)) {
-            values[.neutAbs] = neutAbs
-        }
-        if let hgb = Double(hgbText.trimmingCharacters(in: .whitespaces)) {
-            values[.hgb] = hgb
-        }
-        if let plt = Double(pltText.trimmingCharacters(in: .whitespaces)) {
-            values[.plt] = plt
+        for (key, valueStr) in metricValues {
+            let trimmed = valueStr.trimmingCharacters(in: .whitespaces)
+            if let value = Double(trimmed) {
+                values[key] = value
+            }
         }
         
         let record = BloodTestRecord(
@@ -354,83 +447,89 @@ struct BloodTestRecordView: View {
             values: values
         )
         
-        isSaving = true
-        
         Task {
             do {
                 try await manager.saveRecord(record)
-                
                 await MainActor.run {
                     isSaving = false
-                    alertTitle = "保存成功 ✓"
-                    alertMessage = "血液检测记录已保存"
-                    showingAlert = true
-                    
-                    // 清空输入
-                    wbcText = ""
-                    neutAbsText = ""
-                    hgbText = ""
-                    pltText = ""
-                    eventText = ""
-                    measurementDate = Date()
+                    onComplete("已保存 \(values.count) 项检测指标")
+                    dismiss()
                 }
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    alertTitle = "保存失败"
-                    alertMessage = error.localizedDescription
-                    showingAlert = true
                 }
             }
         }
     }
 }
 
-// MARK: - 指标输入卡片
-struct MetricInputCard: View {
+// MARK: - 指标输入行
+struct MetricInputRow: View {
     let key: LabMetricKey
     @Binding var value: String
     let isDark: Bool
-    let cardBackground: Color
     let primaryTextColor: Color
     let secondaryTextColor: Color
     var isFocused: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Circle()
-                    .fill(key.chartColor)
-                    .frame(width: 8, height: 8)
-                Text(key.shortName)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(key.chartColor)
-                Spacer()
-                Text(key.unit)
-                    .font(.system(size: 9, design: .rounded))
-                    .foregroundStyle(secondaryTextColor)
+        HStack(spacing: 12) {
+            // 指标信息
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    if key.isKeyMetric {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(.yellow)
+                    }
+                    Text(key.displayName)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(primaryTextColor)
+                        .lineLimit(1)
+                }
+                
+                HStack(spacing: 6) {
+                    Text(key.shortName)
+                        .font(.system(size: 10, design: .rounded))
+                        .foregroundStyle(key.chartColor)
+                    
+                    if !key.unit.isEmpty {
+                        Text(key.unit)
+                            .font(.system(size: 9, design: .rounded))
+                            .foregroundStyle(secondaryTextColor.opacity(0.7))
+                    }
+                    
+                    Text("(\(key.normalRangeText.components(separatedBy: "\n").first ?? ""))")
+                        .font(.system(size: 9, design: .rounded))
+                        .foregroundStyle(secondaryTextColor.opacity(0.5))
+                        .lineLimit(1)
+                }
             }
             
-            TextField(key.normalRangeText.components(separatedBy: "\n").first ?? "", text: $value)
+            Spacer()
+            
+            // 输入框
+            TextField("", text: $value)
                 .keyboardType(.decimalPad)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(primaryTextColor)
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(cardBackground)
-                .shadow(
-                    color: isFocused ? key.chartColor.opacity(isDark ? 0.4 : 0.25) : .black.opacity(isDark ? 0.25 : 0.05),
-                    radius: isFocused ? 8 : 5,
-                    x: 0,
-                    y: 2
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(value.isEmpty ? secondaryTextColor : key.chartColor)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 80)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isFocused ? key.chartColor.opacity(0.1) : (isDark ? Color(white: 0.12) : Color(white: 0.95)))
                 )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isFocused ? key.chartColor.opacity(0.5) : .clear, lineWidth: 2)
-        )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isFocused ? key.chartColor.opacity(0.5) : .clear, lineWidth: 1.5)
+                )
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(isFocused ? key.chartColor.opacity(isDark ? 0.05 : 0.03) : .clear)
     }
 }
 

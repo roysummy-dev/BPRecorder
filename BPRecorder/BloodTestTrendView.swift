@@ -184,16 +184,17 @@ struct MiniTrendChart: View {
             if dataPoints.count >= 2 {
                 GeometryReader { geometry in
                     let width = geometry.size.width
-                    let height = geometry.size.height
+                    let height = geometry.size.height - 12 // 留出数值标签空间
+                    let offsetY: CGFloat = 10
                     let range = valueRange
-                    let valueRange = range.max - range.min
+                    let rangeValue = range.max - range.min
                     
                     ZStack {
                         // 折线
                         Path { path in
                             for (index, point) in dataPoints.enumerated() {
                                 let x = width * CGFloat(index) / CGFloat(dataPoints.count - 1)
-                                let y = height - ((point.value - range.min) / valueRange * height)
+                                let y = offsetY + height - ((point.value - range.min) / rangeValue * height)
                                 if index == 0 {
                                     path.move(to: CGPoint(x: x, y: y))
                                 } else {
@@ -203,18 +204,27 @@ struct MiniTrendChart: View {
                         }
                         .stroke(key.chartColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
                         
-                        // 最后一个点
-                        if let last = dataPoints.last {
-                            let x = width
-                            let y = height - ((last.value - range.min) / valueRange * height)
+                        // 数据点和数值
+                        ForEach(Array(dataPoints.enumerated()), id: \.offset) { index, point in
+                            let x = width * CGFloat(index) / CGFloat(dataPoints.count - 1)
+                            let y = offsetY + height - ((point.value - range.min) / rangeValue * height)
+                            
+                            // 数据点
                             Circle()
                                 .fill(key.chartColor)
-                                .frame(width: 5, height: 5)
+                                .frame(width: 4, height: 4)
                                 .position(x: x, y: y)
+                            
+                            // 数值标签（交替显示在上下以避免重叠）
+                            let labelY = index % 2 == 0 ? y - 8 : y + 10
+                            Text(formatValueShort(point.value))
+                                .font(.system(size: 7, weight: .medium, design: .rounded))
+                                .foregroundStyle(key.chartColor)
+                                .position(x: x, y: labelY)
                         }
                     }
                 }
-                .frame(height: 30)
+                .frame(height: 45)
             } else if dataPoints.count == 1 {
                 // 只有一个点时显示水平线
                 Rectangle()
@@ -245,6 +255,16 @@ struct MiniTrendChart: View {
             return String(format: "%.1f", value)
         } else {
             return String(format: "%.2f", value)
+        }
+    }
+    
+    private func formatValueShort(_ value: Double) -> String {
+        if value >= 100 {
+            return String(format: "%.0f", value)
+        } else if value >= 10 {
+            return String(format: "%.0f", value)
+        } else {
+            return String(format: "%.1f", value)
         }
     }
 }
