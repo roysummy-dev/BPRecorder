@@ -85,26 +85,34 @@ struct BloodTestRecordView: View {
                     }
                 }
                 
-                // 重点趋势图
+                // 重点趋势图（点击跳转到所有指标趋势）
                 BloodTestTrendView(
                     records: manager.records,
                     isDark: isDark,
                     cardBackground: cardBackground,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: { showingHistory = true }
+                    onTap: { showingAllMetrics = true }
                 )
                 .padding(.horizontal, 20)
                 
-                // 查看全部指标入口
-                Button(action: { showingAllMetrics = true }) {
+                // 所有检测记录入口
+                Button(action: { showingHistory = true }) {
                     HStack {
-                        Image(systemName: "list.bullet.rectangle")
+                        Image(systemName: "clock.arrow.circlepath")
                             .foregroundStyle(.purple)
-                        Text("查看全部指标趋势")
+                        Text("所有检测记录")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(primaryTextColor)
+                        
                         Spacer()
+                        
+                        if !manager.records.isEmpty {
+                            Text("\(manager.records.count) 条")
+                                .font(.system(size: 12, design: .rounded))
+                                .foregroundStyle(secondaryTextColor)
+                        }
+                        
                         Image(systemName: "chevron.right")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(secondaryTextColor)
