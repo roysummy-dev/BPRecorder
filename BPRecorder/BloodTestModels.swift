@@ -150,7 +150,7 @@ enum LabMetricKey: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    // MARK: - 简短名称（用于图表）
+    // MARK: - 简短名称（英文缩写，用于专业场景）
     var shortName: String {
         switch self {
         case .nlr: return "NLR"
@@ -196,6 +196,58 @@ enum LabMetricKey: String, Codable, CaseIterable, Identifiable {
         case .uricAcid: return "UA"
         case .creatinine: return "Cr"
         case .egfr: return "eGFR"
+        case .cea: return "CEA"
+        case .ca125: return "CA125"
+        case .ca199: return "CA199"
+        }
+    }
+    
+    // MARK: - 简短中文名（用于UI显示）
+    var briefName: String {
+        switch self {
+        case .nlr: return "NLR"
+        case .plr: return "PLR"
+        case .lmr: return "LMR"
+        case .pni: return "PNI"
+        case .wbc: return "白细胞"
+        case .neutPercent: return "中性粒%"
+        case .lymphPercent: return "淋巴%"
+        case .monoPercent: return "单核%"
+        case .eoPercent: return "嗜酸%"
+        case .basoPercent: return "嗜碱%"
+        case .neutAbs: return "中性粒"
+        case .lymphAbs: return "淋巴"
+        case .monoAbs: return "单核"
+        case .eoAbs: return "嗜酸"
+        case .basoAbs: return "嗜碱"
+        case .rbc: return "红细胞"
+        case .hgb: return "血红蛋白"
+        case .hct: return "红细胞比容"
+        case .mcv: return "MCV"
+        case .mch: return "MCH"
+        case .mchc: return "MCHC"
+        case .rdwCv: return "RDW-CV"
+        case .rdwSd: return "RDW-SD"
+        case .plt: return "血小板"
+        case .mpv: return "血小板体积"
+        case .pct: return "血小板比容"
+        case .pLcr: return "大血小板"
+        case .tbil: return "总胆红素"
+        case .dbil: return "直胆"
+        case .ibil: return "间胆"
+        case .tp: return "总蛋白"
+        case .alb: return "白蛋白"
+        case .glob: return "球蛋白"
+        case .agRatio: return "白球比"
+        case .alt: return "谷丙"
+        case .ast: return "谷草"
+        case .astAltRatio: return "谷草/谷丙"
+        case .alp: return "碱性磷酸酶"
+        case .ggt: return "谷氨酰转肽酶"
+        case .bun: return "尿素氮"
+        case .uricAcid: return "尿酸"
+        case .creatinine: return "肌酐"
+        case .egfr: return "肾小球滤过率"
         case .cea: return "CEA"
         case .ca125: return "CA125"
         case .ca199: return "CA199"
@@ -633,9 +685,9 @@ struct BloodTestRecord: Identifiable, Codable, Equatable {
         let keys = LabMetricKey.keyMetrics
         let parts = keys.map { key -> String in
             if let value = value(for: key) {
-                return "\(key.shortName): \(formatValue(value))"
+                return "\(key.briefName): \(formatValue(value))"
             } else {
-                return "\(key.shortName): --"
+                return "\(key.briefName): --"
             }
         }
         return parts.joined(separator: " | ")

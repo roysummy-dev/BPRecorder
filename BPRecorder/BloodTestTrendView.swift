@@ -99,7 +99,7 @@ struct BloodTestTrendView: View {
                             Circle()
                                 .fill(key.chartColor)
                                 .frame(width: 6, height: 6)
-                            Text(key.shortName)
+                            Text(key.briefName)
                                 .font(.system(size: 9, design: .rounded))
                                 .foregroundStyle(secondaryTextColor)
                         }
@@ -157,7 +157,7 @@ struct MiniTrendChart: View {
         VStack(alignment: .leading, spacing: 4) {
             // 标题和数值
             HStack {
-                Text(key.shortName)
+                Text(key.briefName)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(key.chartColor)
                 

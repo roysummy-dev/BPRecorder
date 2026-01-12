@@ -76,7 +76,7 @@ struct MetricTrendDetailView: View {
                                 Text("简称")
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundStyle(secondaryTextColor)
-                                Text(key.shortName)
+                                Text(key.briefName)
                                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                                     .foregroundStyle(key.chartColor)
                             }
@@ -272,7 +272,7 @@ struct MetricTrendDetailView: View {
                 .padding(.top, 16)
             }
             .background(backgroundColor.ignoresSafeArea())
-            .navigationTitle(key.shortName)
+            .navigationTitle(key.briefName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

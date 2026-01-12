@@ -301,7 +301,7 @@ struct BloodTestSummaryView: View {
             HStack(spacing: 8) {
                 ForEach(LabMetricKey.keyMetrics, id: \.self) { key in
                     VStack(spacing: 4) {
-                        Text(key.shortName)
+                        Text(key.briefName)
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundStyle(secondaryTextColor)
                         
@@ -422,11 +422,11 @@ struct BloodTestRecordRow: View {
                                 .frame(width: 6, height: 6)
                             
                             if let value = record.value(for: key) {
-                                Text("\(key.shortName): \(formatValue(value))")
+                                Text("\(key.briefName): \(formatValue(value))")
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundStyle(primaryTextColor)
                             } else {
-                                Text("\(key.shortName): --")
+                                Text("\(key.briefName): --")
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundStyle(secondaryTextColor.opacity(0.5))
                             }

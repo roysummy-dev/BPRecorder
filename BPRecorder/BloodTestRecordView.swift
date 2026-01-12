@@ -69,7 +69,57 @@ struct BloodTestRecordView: View {
                 }
                 .padding(.top, 6)
                 
-                // 录入方式选择卡片
+                // 最新记录概览（放在最上面）
+                if let latest = manager.latestRecord {
+                    LatestRecordCard(
+                        record: latest,
+                        previousRecord: manager.records.count > 1 ? manager.records[1] : nil,
+                        isDark: isDark,
+                        cardBackground: cardBackground,
+                        primaryTextColor: primaryTextColor,
+                        secondaryTextColor: secondaryTextColor
+                    )
+                    .padding(.horizontal, 20)
+                    .onTapGesture {
+                        showingHistory = true
+                    }
+                }
+                
+                // 重点趋势图
+                BloodTestTrendView(
+                    records: manager.records,
+                    isDark: isDark,
+                    cardBackground: cardBackground,
+                    primaryTextColor: primaryTextColor,
+                    secondaryTextColor: secondaryTextColor,
+                    onTap: { showingHistory = true }
+                )
+                .padding(.horizontal, 20)
+                
+                // 查看全部指标入口
+                Button(action: { showingAllMetrics = true }) {
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle")
+                            .foregroundStyle(.purple)
+                        Text("查看全部指标趋势")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(primaryTextColor)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(secondaryTextColor)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(cardBackground)
+                            .shadow(color: .black.opacity(isDark ? 0.25 : 0.05), radius: 4, x: 0, y: 2)
+                    )
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 20)
+                
+                // 录入方式选择卡片（放在下面）
                 VStack(spacing: 12) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
@@ -156,56 +206,6 @@ struct BloodTestRecordView: View {
                         .fill(cardBackground)
                         .shadow(color: .black.opacity(isDark ? 0.3 : 0.06), radius: 6, x: 0, y: 3)
                 )
-                .padding(.horizontal, 20)
-                
-                // 最新记录概览
-                if let latest = manager.latestRecord {
-                    LatestRecordCard(
-                        record: latest,
-                        previousRecord: manager.records.count > 1 ? manager.records[1] : nil,
-                        isDark: isDark,
-                        cardBackground: cardBackground,
-                        primaryTextColor: primaryTextColor,
-                        secondaryTextColor: secondaryTextColor
-                    )
-                    .padding(.horizontal, 20)
-                    .onTapGesture {
-                        showingHistory = true
-                    }
-                }
-                
-                // 重点趋势图
-                BloodTestTrendView(
-                    records: manager.records,
-                    isDark: isDark,
-                    cardBackground: cardBackground,
-                    primaryTextColor: primaryTextColor,
-                    secondaryTextColor: secondaryTextColor,
-                    onTap: { showingHistory = true }
-                )
-                .padding(.horizontal, 20)
-                
-                // 查看全部指标入口
-                Button(action: { showingAllMetrics = true }) {
-                    HStack {
-                        Image(systemName: "list.bullet.rectangle")
-                            .foregroundStyle(.purple)
-                        Text("查看全部指标趋势")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(primaryTextColor)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(secondaryTextColor)
-                    }
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(cardBackground)
-                            .shadow(color: .black.opacity(isDark ? 0.25 : 0.05), radius: 4, x: 0, y: 2)
-                    )
-                }
-                .buttonStyle(.plain)
                 .padding(.horizontal, 20)
                 
                 Spacer(minLength: 20)
@@ -490,7 +490,7 @@ struct MetricInputRow: View {
                 }
                 
                 HStack(spacing: 6) {
-                    Text(key.shortName)
+                    Text(key.briefName)
                         .font(.system(size: 10, design: .rounded))
                         .foregroundStyle(key.chartColor)
                     
@@ -613,7 +613,7 @@ struct MetricValueBadge: View {
     
     var body: some View {
         VStack(spacing: 2) {
-            Text(key.shortName)
+            Text(key.briefName)
                 .font(.system(size: 9, weight: .medium, design: .rounded))
                 .foregroundStyle(key.chartColor)
             

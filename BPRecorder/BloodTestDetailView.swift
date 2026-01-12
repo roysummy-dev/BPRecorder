@@ -258,7 +258,7 @@ struct KeyMetricCard: View {
                 Circle()
                     .fill(key.chartColor)
                     .frame(width: 8, height: 8)
-                Text(key.shortName)
+                Text(key.briefName)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(key.chartColor)
                 Spacer()

@@ -255,7 +255,7 @@ struct MetricListRow: View {
                     }
                     
                     HStack(spacing: 8) {
-                        Text(key.shortName)
+                        Text(key.briefName)
                             .font(.system(size: 11, design: .rounded))
                             .foregroundStyle(key.chartColor)
                         
