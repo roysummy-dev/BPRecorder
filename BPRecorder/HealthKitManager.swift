@@ -289,3 +289,4 @@ class HealthKitManager: ObservableObject {
     }
 }
 
+

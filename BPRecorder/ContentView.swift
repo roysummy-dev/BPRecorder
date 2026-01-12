@@ -88,209 +88,207 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // 背景渐变
-                backgroundColor
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        hideKeyboard()
-                    }
-                    .gesture(
-                        DragGesture(minimumDistance: 30, coordinateSpace: .local)
-                            .onEnded { value in
-                                // 左滑或下滑关闭键盘
-                                if value.translation.width < -30 || value.translation.height > 30 {
-                                    hideKeyboard()
-                                }
+        ZStack {
+            // 背景渐变
+            backgroundColor
+                .ignoresSafeArea()
+                .onTapGesture {
+                    hideKeyboard()
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                        .onEnded { value in
+                            // 左滑或下滑关闭键盘
+                            if value.translation.width < -30 || value.translation.height > 30 {
+                                hideKeyboard()
                             }
-                    )
-                
-                VStack(spacing: 12) {
-                    // 顶部心形图标和状态
-                    VStack(spacing: 6) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.red.opacity(0.8), Color.pink],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                        }
+                )
+            
+            VStack(spacing: 12) {
+                // 顶部心形图标和状态
+                VStack(spacing: 6) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.red.opacity(0.8), Color.pink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                                .frame(width: 56, height: 56)
-                                .shadow(color: Color.red.opacity(isDark ? 0.5 : 0.3), radius: 8, x: 0, y: 4)
-                            
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 26))
-                                .foregroundStyle(.white)
-                                .symbolEffect(.pulse, options: .repeating)
-                        }
-                        
-                        Text(bloodPressureStatus.text)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(bloodPressureStatus.color)
-                            .animation(.easeInOut, value: bloodPressureStatus.text)
-                    }
-                    .onTapGesture {
-                        hideKeyboard()
-                    }
-                    
-                    // 血压输入区域
-                    VStack(spacing: 10) {
-                        BloodPressureInputField(
-                            title: "收缩压",
-                            subtitle: "高压",
-                            value: $systolicText,
-                            unit: "mmHg",
-                            iconColor: .red,
-                            placeholder: "120",
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: $focusedField,
-                            field: .systolic
-                        )
-                        
-                        BloodPressureInputField(
-                            title: "舒张压",
-                            subtitle: "低压",
-                            value: $diastolicText,
-                            unit: "mmHg",
-                            iconColor: .blue,
-                            placeholder: "80",
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: $focusedField,
-                            field: .diastolic
-                        )
-                        
-                        BloodPressureInputField(
-                            title: "心率",
-                            subtitle: "可选",
-                            value: $heartRateText,
-                            unit: "次/分",
-                            iconColor: .pink,
-                            placeholder: "72",
-                            icon: "waveform.path.ecg",
-                            isDark: isDark,
-                            cardBackground: cardBackground,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            isFocused: $focusedField,
-                            field: .heartRate
-                        )
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    // 日期时间选择
-                    HStack {
-                        Text("测量时间")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(tertiaryTextColor)
-                        
-                        Spacer()
-                        
-                        DatePicker(
-                            "",
-                            selection: Binding(
-                                get: { measurementDate },
-                                set: { newValue in
-                                    // 先清除输入框焦点
-                                    focusedField = nil
-                                    measurementDate = newValue
-                                    hasManuallyEditedDate = true
-                                    // 选择后关闭日期选择器
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        hideKeyboard()
-                                    }
-                                }
-                            ),
-                            in: ...Date(),
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .tint(.pink)
-                        .onTapGesture {
-                            // 点击日期选择器时先清除输入框焦点
-                            focusedField = nil
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .onTapGesture {
-                        focusedField = nil
-                        hideKeyboard()
-                    }
-                    
-                    // 保存按钮
-                    Button(action: saveBloodPressure) {
-                        HStack(spacing: 8) {
-                            if isSaving {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "heart.text.square.fill")
-                                    .font(.system(size: 16))
-                            }
-                            Text(isSaving ? "保存中..." : "保存到健康")
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.red, Color.pink],
-                                startPoint: .leading,
-                                endPoint: .trailing
                             )
-                        )
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .shadow(color: Color.red.opacity(isDark ? 0.6 : 0.4), radius: 8, x: 0, y: 4)
+                            .frame(width: 56, height: 56)
+                            .shadow(color: Color.red.opacity(isDark ? 0.5 : 0.3), radius: 8, x: 0, y: 4)
+                        
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(.white)
+                            .symbolEffect(.pulse, options: .repeating)
                     }
-                    .disabled(isSaving || !isInputValid)
-                    .opacity(isInputValid ? 1.0 : 0.6)
-                    .padding(.horizontal, 20)
                     
-                    // 趋势图
-                    BloodPressureTrendView(
-                        records: healthKitManager.recentRecords,
+                    Text(bloodPressureStatus.text)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(bloodPressureStatus.color)
+                        .animation(.easeInOut, value: bloodPressureStatus.text)
+                }
+                .onTapGesture {
+                    hideKeyboard()
+                }
+                
+                // 血压输入区域
+                VStack(spacing: 10) {
+                    BloodPressureInputField(
+                        title: "收缩压",
+                        subtitle: "高压",
+                        value: $systolicText,
+                        unit: "mmHg",
+                        iconColor: .red,
+                        placeholder: "120",
                         isDark: isDark,
                         cardBackground: cardBackground,
                         primaryTextColor: primaryTextColor,
-                        secondaryTextColor: secondaryTextColor
+                        secondaryTextColor: secondaryTextColor,
+                        isFocused: $focusedField,
+                        field: .systolic
                     )
-                    .padding(.horizontal, 20)
-                    .onTapGesture {
-                        showingHistory = true
-                    }
                     
-                    Spacer(minLength: 0)
+                    BloodPressureInputField(
+                        title: "舒张压",
+                        subtitle: "低压",
+                        value: $diastolicText,
+                        unit: "mmHg",
+                        iconColor: .blue,
+                        placeholder: "80",
+                        isDark: isDark,
+                        cardBackground: cardBackground,
+                        primaryTextColor: primaryTextColor,
+                        secondaryTextColor: secondaryTextColor,
+                        isFocused: $focusedField,
+                        field: .diastolic
+                    )
+                    
+                    BloodPressureInputField(
+                        title: "心率",
+                        subtitle: "可选",
+                        value: $heartRateText,
+                        unit: "次/分",
+                        iconColor: .pink,
+                        placeholder: "72",
+                        icon: "waveform.path.ecg",
+                        isDark: isDark,
+                        cardBackground: cardBackground,
+                        primaryTextColor: primaryTextColor,
+                        secondaryTextColor: secondaryTextColor,
+                        isFocused: $focusedField,
+                        field: .heartRate
+                    )
                 }
-                .padding(.top, 6)
-            }
-            .navigationTitle("血压记录")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .keyboard) {
-                    HStack {
-                        Spacer()
-                        Button("完成") {
-                            hideKeyboard()
+                .padding(.horizontal, 20)
+                
+                // 日期时间选择
+                HStack {
+                    Text("测量时间")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(tertiaryTextColor)
+                    
+                    Spacer()
+                    
+                    DatePicker(
+                        "",
+                        selection: Binding(
+                            get: { measurementDate },
+                            set: { newValue in
+                                // 先清除输入框焦点
+                                focusedField = nil
+                                measurementDate = newValue
+                                hasManuallyEditedDate = true
+                                // 选择后关闭日期选择器
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    hideKeyboard()
+                                }
+                            }
+                        ),
+                        in: ...Date(),
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .tint(.pink)
+                    .onTapGesture {
+                        // 点击日期选择器时先清除输入框焦点
+                        focusedField = nil
+                    }
+                }
+                .padding(.horizontal, 20)
+                .onTapGesture {
+                    focusedField = nil
+                    hideKeyboard()
+                }
+                
+                // 保存按钮
+                Button(action: saveBloodPressure) {
+                    HStack(spacing: 8) {
+                        if isSaving {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "heart.text.square.fill")
+                                .font(.system(size: 16))
                         }
-                        .fontWeight(.semibold)
+                        Text(isSaving ? "保存中..." : "保存到健康")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.red, Color.pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: Color.red.opacity(isDark ? 0.6 : 0.4), radius: 8, x: 0, y: 4)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showingHistory = true }) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundStyle(.pink)
+                .disabled(isSaving || !isInputValid)
+                .opacity(isInputValid ? 1.0 : 0.6)
+                .padding(.horizontal, 20)
+                
+                // 趋势图
+                BloodPressureTrendView(
+                    records: healthKitManager.recentRecords,
+                    isDark: isDark,
+                    cardBackground: cardBackground,
+                    primaryTextColor: primaryTextColor,
+                    secondaryTextColor: secondaryTextColor
+                )
+                .padding(.horizontal, 20)
+                .onTapGesture {
+                    showingHistory = true
+                }
+                
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 6)
+        }
+        .navigationTitle("血压记录")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                HStack {
+                    Spacer()
+                    Button("完成") {
+                        hideKeyboard()
                     }
+                    .fontWeight(.semibold)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: { showingHistory = true }) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundStyle(.pink)
                 }
             }
         }

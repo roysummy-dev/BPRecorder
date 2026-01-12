@@ -1,8 +1,13 @@
-# BPRecorder 血压记录
+# BPRecorder 健康记录
 
-一款简洁优雅的 iOS 血压记录应用，将血压数据直接保存到 Apple 健康应用。
+一款简洁优雅的 iOS 健康数据记录应用，将健康数据直接保存到 Apple 健康应用。
 
 ## ✨ 功能特性
+
+### 📋 侧边栏导航
+- 便捷的侧边栏模块切换
+- 支持多个健康数据模块
+- 流畅的滑动动画效果
 
 ### 📝 血压记录
 - 输入收缩压（高压）和舒张压（低压）
@@ -23,7 +28,16 @@
 | 高血压 | ≥ 140 | ≥ 90 | 🔴 红色 |
 | 偏低 | < 90 | < 60 | 🔵 蓝色 |
 
+### ⚖️ 体重记录 (开发中)
+- 记录每日体重变化
+- 体重趋势追踪
+
+### 🩸 血液检测 (开发中)
+- 记录血液检测指标
+- 检测结果可视化
+
 ### 🌓 界面特性
+- 侧边栏模块导航
 - 自动适配亮色/暗色主题
 - 流畅的动画效果
 - 简洁直观的操作体验
@@ -54,7 +68,10 @@
 ```
 BPRecorder/
 ├── BPRecorderApp.swift          # 应用入口
-├── ContentView.swift            # 主界面（血压输入）
+├── MainTabView.swift            # 侧边栏导航主视图
+├── ContentView.swift            # 血压记录模块
+├── WeightRecordView.swift       # 体重记录模块（开发中）
+├── BloodTestRecordView.swift    # 血液检测模块（开发中）
 ├── HealthKitManager.swift       # 健康数据管理
 ├── BloodPressureTrendView.swift # 血压趋势图
 ├── HistoryView.swift            # 历史记录页面
