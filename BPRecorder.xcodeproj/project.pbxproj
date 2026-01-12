@@ -401,8 +401,8 @@
 				DEVELOPMENT_TEAM = 25323KQQ5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要读取您的血压数据以便查看历史记录";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入血压数据到健康应用以便记录您的测量结果";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要读取您的健康数据（血压、体重等）以便查看历史记录和趋势";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据（血压、体重等）到健康应用以便记录您的测量结果";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,8 +432,8 @@
 				DEVELOPMENT_TEAM = 25323KQQ5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要读取您的血压数据以便查看历史记录";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入血压数据到健康应用以便记录您的测量结果";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "此应用需要读取您的健康数据（血压、体重等）以便查看历史记录和趋势";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "此应用需要写入健康数据（血压、体重等）到健康应用以便记录您的测量结果";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -1,29 +1,34 @@
 //
-//  BloodPressureTrendView.swift
+//  WeightTrendView.swift
 //  BPRecorder
 //
-//  Created by shibofang on 2026/1/11.
+//  Created by shibofang on 2026/1/12.
 //
 
 import SwiftUI
 
-struct BloodPressureTrendView: View {
-    let records: [BloodPressureRecord]
+struct WeightTrendView: View {
+    let records: [WeightRecord]
     let isDark: Bool
     let cardBackground: Color
     let primaryTextColor: Color
     let secondaryTextColor: Color
     
-    private var sortedRecords: [BloodPressureRecord] {
-        records.sorted { $0.date < $1.date }.suffix(8).map { $0 }
+    private var sortedRecords: [WeightRecord] {
+        records.sorted { $0.date < $1.date }.suffix(10).map { $0 }
     }
     
-    private var systolicRange: (min: Double, max: Double) {
-        guard !sortedRecords.isEmpty else { return (60, 160) }
-        let allValues = sortedRecords.flatMap { [$0.systolic, $0.diastolic] }
-        let minVal = max(40, (allValues.min() ?? 60) - 20)
-        let maxVal = min(220, (allValues.max() ?? 160) + 20)
+    private var weightRange: (min: Double, max: Double) {
+        guard !sortedRecords.isEmpty else { return (50, 80) }
+        let allValues = sortedRecords.map { $0.weight }
+        let minVal = max(30, (allValues.min() ?? 50) - 8)
+        let maxVal = min(150, (allValues.max() ?? 80) + 8)
         return (minVal, maxVal)
+    }
+    
+    private var weightChange: Double? {
+        guard sortedRecords.count >= 2 else { return nil }
+        return sortedRecords.last!.weight - sortedRecords.first!.weight
     }
     
     var body: some View {
@@ -31,14 +36,14 @@ struct BloodPressureTrendView: View {
             // 标题
             HStack {
                 Image(systemName: "chart.xyaxis.line")
-                    .foregroundStyle(.pink)
-                Text("血压趋势")
+                    .foregroundStyle(.green)
+                Text("体重趋势")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(primaryTextColor)
                 
                 Spacer()
                 
-                Text("最近7天")
+                Text("最近30天")
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(secondaryTextColor)
                 
@@ -52,10 +57,10 @@ struct BloodPressureTrendView: View {
                 HStack {
                     Spacer()
                     VStack(spacing: 6) {
-                        Image(systemName: "chart.line.downtrend.xyaxis")
+                        Image(systemName: "scalemass")
                             .font(.system(size: 28))
                             .foregroundStyle(secondaryTextColor.opacity(0.5))
-                        Text("暂无血压记录")
+                        Text("暂无体重记录")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(secondaryTextColor)
                     }
@@ -66,42 +71,44 @@ struct BloodPressureTrendView: View {
                 // 折线图
                 GeometryReader { geometry in
                     let width = geometry.size.width - 20
-                    let height = geometry.size.height - 35  // 留更多空间给标签
+                    let height = geometry.size.height - 30  // 留更多空间给标签
                     let offsetX: CGFloat = 10
-                    let offsetY: CGFloat = 20  // 顶部留空间给数值标签
-                    let range = systolicRange
+                    let offsetY: CGFloat = 18  // 顶部留空间给数值标签
+                    let range = weightRange
                     let valueRange = range.max - range.min
                     
                     ZStack {
-                        // 收缩压折线
+                        // 体重折线
                         if sortedRecords.count > 1 {
+                            // 填充区域
                             Path { path in
                                 for (index, record) in sortedRecords.enumerated() {
                                     let x = offsetX + width * CGFloat(index) / CGFloat(sortedRecords.count - 1)
-                                    let y = offsetY + height - ((record.systolic - range.min) / valueRange * height)
+                                    let y = offsetY + height - ((record.weight - range.min) / valueRange * height)
                                     if index == 0 {
-                                        path.move(to: CGPoint(x: x, y: y))
+                                        path.move(to: CGPoint(x: x, y: offsetY + height))
+                                        path.addLine(to: CGPoint(x: x, y: y))
                                     } else {
                                         path.addLine(to: CGPoint(x: x, y: y))
                                     }
                                 }
+                                let lastX = offsetX + width
+                                path.addLine(to: CGPoint(x: lastX, y: offsetY + height))
+                                path.closeSubpath()
                             }
-                            .stroke(
+                            .fill(
                                 LinearGradient(
-                                    colors: [.red, .pink],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                ),
-                                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
+                                    colors: [.green.opacity(0.3), .green.opacity(0.05)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
                             )
-                        }
-                        
-                        // 舒张压折线
-                        if sortedRecords.count > 1 {
+                            
+                            // 折线
                             Path { path in
                                 for (index, record) in sortedRecords.enumerated() {
                                     let x = offsetX + width * CGFloat(index) / CGFloat(sortedRecords.count - 1)
-                                    let y = offsetY + height - ((record.diastolic - range.min) / valueRange * height)
+                                    let y = offsetY + height - ((record.weight - range.min) / valueRange * height)
                                     if index == 0 {
                                         path.move(to: CGPoint(x: x, y: y))
                                     } else {
@@ -111,7 +118,7 @@ struct BloodPressureTrendView: View {
                             }
                             .stroke(
                                 LinearGradient(
-                                    colors: [.blue, .cyan],
+                                    colors: [.green, .mint],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 ),
@@ -121,53 +128,49 @@ struct BloodPressureTrendView: View {
                         
                         // 数据点和数值标签
                         ForEach(Array(sortedRecords.enumerated()), id: \.element.id) { index, record in
-                            let x = sortedRecords.count > 1 
-                                ? offsetX + width * CGFloat(index) / CGFloat(sortedRecords.count - 1) 
+                            let x = sortedRecords.count > 1
+                                ? offsetX + width * CGFloat(index) / CGFloat(sortedRecords.count - 1)
                                 : offsetX + width / 2
-                            let systolicY = offsetY + height - ((record.systolic - range.min) / valueRange * height)
-                            let diastolicY = offsetY + height - ((record.diastolic - range.min) / valueRange * height)
+                            let y = offsetY + height - ((record.weight - range.min) / valueRange * height)
                             
-                            // 收缩压点
+                            // 数据点
                             Circle()
                                 .fill(statusColor(for: record))
                                 .frame(width: 8, height: 8)
-                                .position(x: x, y: systolicY)
+                                .position(x: x, y: y)
                             
-                            // 舒张压点
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 6, height: 6)
-                                .position(x: x, y: diastolicY)
-                            
-                            // 收缩压数值标签
-                            Text("\(Int(record.systolic))")
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                            // 数值标签（交错显示避免重叠）
+                            let labelY = index % 2 == 0 ? y - 12 : y + 12
+                            Text(String(format: "%.1f", record.weight))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
                                 .foregroundStyle(statusColor(for: record))
-                                .position(x: x, y: systolicY - 12)
-                            
-                            // 舒张压数值标签
-                            Text("\(Int(record.diastolic))")
-                                .font(.system(size: 8, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.blue)
-                                .position(x: x, y: diastolicY + 10)
+                                .position(x: x, y: labelY)
                         }
                     }
                 }
                 .frame(height: 130)
                 
-                // 图例
-                HStack(spacing: 10) {
+                // 图例和当前体重
+                HStack(spacing: 12) {
                     HStack(spacing: 4) {
-                        Circle().fill(Color.red).frame(width: 6, height: 6)
-                        Text("收缩压").font(.system(size: 10, design: .rounded)).foregroundStyle(secondaryTextColor)
+                        Circle().fill(Color.green).frame(width: 6, height: 6)
+                        Text("体重").font(.system(size: 10, design: .rounded)).foregroundStyle(secondaryTextColor)
                     }
-                    HStack(spacing: 4) {
-                        Circle().fill(Color.blue).frame(width: 6, height: 6)
-                        Text("舒张压").font(.system(size: 10, design: .rounded)).foregroundStyle(secondaryTextColor)
+                    
+                    if let change = weightChange {
+                        HStack(spacing: 2) {
+                            Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                .font(.system(size: 9, weight: .bold))
+                            Text(String(format: "%.1f kg", abs(change)))
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                        }
+                        .foregroundStyle(change >= 0 ? .orange : .green)
                     }
+                    
                     Spacer()
+                    
                     if let latest = sortedRecords.last {
-                        Text("\(Int(latest.systolic))/\(Int(latest.diastolic))")
+                        Text(String(format: "%.1f kg", latest.weight))
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundStyle(statusColor(for: latest))
                     }
@@ -182,12 +185,12 @@ struct BloodPressureTrendView: View {
         )
     }
     
-    private func statusColor(for record: BloodPressureRecord) -> Color {
+    private func statusColor(for record: WeightRecord) -> Color {
         switch record.status {
-        case .low: return .blue
+        case .underweight: return .blue
         case .normal: return .green
-        case .elevated: return .orange
-        case .high: return .red
+        case .overweight: return .orange
+        case .obese: return .red
         }
     }
 }
