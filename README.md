@@ -45,9 +45,23 @@
 | 偏重 | 65-80 kg | 🟠 橙色 |
 | 肥胖 | > 80 kg | 🔴 红色 |
 
-### 🩸 血液检测 (开发中)
-- 记录血液检测指标
-- 检测结果可视化
+### 🩸 血液检测
+- 记录完整血液检测指标（40+ 项指标）
+- **重点监测**：WBC、NEUT#、HGB、PLT 四项关键指标
+- 支持 EVENT 标签（治疗方案/周期/天数）解析
+- **本地 JSON 存储**（不依赖 HealthKit）
+- **趋势图表**：重点指标 2x2 趋势图 + 单指标详细趋势
+- **历史记录**：按日期分组、按方案筛选
+- **所有指标浏览**：按分类查看、搜索、查看单指标趋势
+- **JSON 导入**：支持粘贴中文字段名 JSON 快速导入
+
+### 🔬 血液指标分类
+| 分类 | 指标数量 | 示例 |
+|------|----------|------|
+| 综合指数 | 4 | NLR、PLR、LMR、PNI |
+| 血常规 | 24 | WBC、RBC、HGB、PLT 等 |
+| 生化 | 16 | ALT、AST、肌酐、尿素氮等 |
+| 肿瘤标志物 | 3 | CEA、CA125、CA199 |
 
 ### 🌓 界面特性
 - 侧边栏模块导航
@@ -64,17 +78,25 @@
 
 ## 🔒 隐私说明
 
-本应用需要以下健康数据权限：
+本应用需要以下权限：
+
+**HealthKit 数据（血压/体重模块）：**
 - **读取**：血压、心率、体重数据（用于显示历史记录和趋势）
 - **写入**：血压、心率、体重数据（用于保存测量结果）
 
-所有数据均存储在 Apple 健康应用中，不会上传到任何服务器。
+**本地存储（血液检测模块）：**
+- 血液检测数据存储在应用本地 JSON 文件中
+- 路径：`Application Support/BPRecorder/blood_tests.json`
+
+所有数据不会上传到任何服务器。
 
 ## 🛠 技术栈
 
 - **SwiftUI** - 声明式 UI 框架
-- **HealthKit** - 健康数据读写
+- **HealthKit** - 健康数据读写（血压/体重）
+- **JSON/Codable** - 本地数据持久化（血液检测）
 - **Swift Concurrency** - async/await 异步编程
+- **Core Graphics** - 自定义折线图绘制
 
 ## 📁 项目结构
 
@@ -82,15 +104,29 @@
 BPRecorder/
 ├── BPRecorderApp.swift          # 应用入口
 ├── MainTabView.swift            # 侧边栏导航主视图
-├── ContentView.swift            # 血压记录模块
-├── WeightRecordView.swift       # 体重记录模块
-├── WeightKitManager.swift       # 体重数据管理
-├── WeightTrendView.swift        # 体重趋势图
-├── WeightHistoryView.swift      # 体重历史记录页面
-├── BloodTestRecordView.swift    # 血液检测模块（开发中）
-├── HealthKitManager.swift       # 健康数据管理
-├── BloodPressureTrendView.swift # 血压趋势图
-├── HistoryView.swift            # 历史记录页面
+│
+├── 血压模块/
+│   ├── ContentView.swift            # 血压记录主界面
+│   ├── HealthKitManager.swift       # 血压数据管理
+│   ├── BloodPressureTrendView.swift # 血压趋势图
+│   └── HistoryView.swift            # 血压历史记录
+│
+├── 体重模块/
+│   ├── WeightRecordView.swift       # 体重记录主界面
+│   ├── WeightKitManager.swift       # 体重数据管理
+│   ├── WeightTrendView.swift        # 体重趋势图
+│   └── WeightHistoryView.swift      # 体重历史记录
+│
+├── 血液检测模块/
+│   ├── BloodTestRecordView.swift    # 血液检测主界面
+│   ├── BloodTestModels.swift        # 数据模型与指标定义
+│   ├── BloodTestKitManager.swift    # JSON 数据管理
+│   ├── BloodTestTrendView.swift     # 重点趋势图
+│   ├── BloodTestHistoryView.swift   # 历史记录
+│   ├── BloodTestDetailView.swift    # 单条记录详情
+│   ├── AllMetricsView.swift         # 所有指标浏览
+│   └── MetricTrendDetailView.swift  # 单指标趋势详情
+│
 ├── BPRecorder.entitlements      # HealthKit 权限配置
 └── Assets.xcassets/             # 资源文件
     └── AppIcon.appiconset/      # 应用图标
