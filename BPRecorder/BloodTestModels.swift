@@ -12,7 +12,7 @@ import SwiftUI
 enum LabMetricCategory: String, Codable, CaseIterable {
     case index = "综合指数"
     case bloodRoutine = "血常规"
-    case biochemistry = "生化"
+    case biochemistry = "肝肾功能"
     case tumorMarker = "肿瘤标志物"
     
     var sortOrder: Int {
@@ -71,7 +71,7 @@ enum LabMetricKey: String, Codable, CaseIterable, Identifiable {
     case pct = "pct"
     case pLcr = "pLcr"
     
-    // 生化 - 肝功能
+    // 肝肾功能 - 肝功能
     case tbil = "tbil"
     case dbil = "dbil"
     case ibil = "ibil"
@@ -85,7 +85,7 @@ enum LabMetricKey: String, Codable, CaseIterable, Identifiable {
     case alp = "alp"
     case ggt = "ggt"
     
-    // 生化 - 肾功能
+    // 肝肾功能 - 肾功能
     case bun = "bun"
     case uricAcid = "uricAcid"
     case creatinine = "creatinine"
