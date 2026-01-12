@@ -35,6 +35,8 @@ struct MainTabView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var selectedModule: HealthModule = .bloodPressure
     @State private var isExpanded = false
+    @State private var dragOffset: CGFloat = 0
+    @GestureState private var isDragging = false
     
     private var isDark: Bool { colorScheme == .dark }
     
@@ -46,6 +48,43 @@ struct MainTabView: View {
     private let collapsedWidth: CGFloat = 70
     // 展开时的宽度
     private let expandedWidth: CGFloat = 240
+    // 手势触发阈值
+    private let swipeThreshold: CGFloat = 50
+    
+    // 侧边栏手势
+    private var sidebarDragGesture: some Gesture {
+        DragGesture(minimumDistance: 20, coordinateSpace: .local)
+            .updating($isDragging) { _, state, _ in
+                state = true
+            }
+            .onChanged { value in
+                let translation = value.translation.width
+                if isExpanded {
+                    // 展开状态：只允许左滑（负值）
+                    dragOffset = min(0, translation)
+                } else {
+                    // 折叠状态：只允许右滑（正值）
+                    dragOffset = max(0, min(expandedWidth - collapsedWidth, translation))
+                }
+            }
+            .onEnded { value in
+                let translation = value.translation.width
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    if isExpanded {
+                        // 展开状态：左滑超过阈值则收起
+                        if translation < -swipeThreshold {
+                            isExpanded = false
+                        }
+                    } else {
+                        // 折叠状态：右滑超过阈值则展开
+                        if translation > swipeThreshold {
+                            isExpanded = true
+                        }
+                    }
+                    dragOffset = 0
+                }
+            }
+    }
     
     var body: some View {
         ZStack(alignment: .leading) {
@@ -77,15 +116,16 @@ struct MainTabView: View {
             }
             
             // 展开时的遮罩
-            if isExpanded {
-                Color.black.opacity(0.3)
+            if isExpanded || isDragging {
+                let progress = isExpanded ? 1.0 : dragOffset / (expandedWidth - collapsedWidth)
+                Color.black.opacity(0.3 * progress)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             isExpanded = false
                         }
                     }
-                    .transition(.opacity)
+                    .gesture(sidebarDragGesture)
             }
             
             // 侧边栏
@@ -108,7 +148,7 @@ struct MainTabView: View {
                                     .foregroundStyle(isDark ? .white : .primary)
                             }
                             
-                            if isExpanded {
+                            if showExpandedContent {
                                 Text("健康记录")
                                     .font(.system(size: 17, weight: .bold, design: .rounded))
                                     .foregroundStyle(isDark ? .white : Color(white: 0.15))
@@ -122,7 +162,7 @@ struct MainTabView: View {
                     .buttonStyle(.plain)
                     
                     Divider()
-                        .padding(.horizontal, isExpanded ? 16 : 12)
+                        .padding(.horizontal, showExpandedContent ? 16 : 12)
                         .opacity(0.5)
                     
                     // 模块列表
@@ -131,7 +171,7 @@ struct MainTabView: View {
                             SidebarModuleButton(
                                 module: module,
                                 isSelected: selectedModule == module,
-                                isExpanded: isExpanded,
+                                isExpanded: showExpandedContent,
                                 isDark: isDark
                             ) {
                                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -146,13 +186,13 @@ struct MainTabView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, isExpanded ? 12 : 15)
+                    .padding(.horizontal, showExpandedContent ? 12 : 15)
                     .padding(.top, 16)
                     
                     Spacer()
                     
                     // 底部版本信息（仅展开时显示）
-                    if isExpanded {
+                    if showExpandedContent {
                         HStack {
                             Image(systemName: "info.circle")
                                 .font(.system(size: 12))
@@ -163,14 +203,32 @@ struct MainTabView: View {
                         .padding(.bottom, 20)
                     }
                 }
-                .frame(width: isExpanded ? expandedWidth : collapsedWidth)
+                .frame(width: currentSidebarWidth)
                 .background(sidebarBg)
                 .shadow(color: .black.opacity(isExpanded ? 0.15 : 0.08), radius: isExpanded ? 15 : 8, x: 2, y: 0)
+                .gesture(sidebarDragGesture)
                 
                 Spacer()
             }
         }
         .ignoresSafeArea(.keyboard)
+    }
+    
+    // 计算当前侧边栏宽度
+    private var currentSidebarWidth: CGFloat {
+        let baseWidth = isExpanded ? expandedWidth : collapsedWidth
+        if isExpanded {
+            // 展开状态：左滑时减少宽度
+            return max(collapsedWidth, baseWidth + dragOffset)
+        } else {
+            // 折叠状态：右滑时增加宽度
+            return min(expandedWidth, baseWidth + dragOffset)
+        }
+    }
+    
+    // 是否显示展开内容（当宽度超过阈值时显示）
+    private var showExpandedContent: Bool {
+        currentSidebarWidth > (collapsedWidth + expandedWidth) / 2
     }
 }
 
